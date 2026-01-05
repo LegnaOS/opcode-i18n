@@ -1,13 +1,15 @@
-import React, { Suspense, lazy, useEffect } from 'react';
+import React, { Suspense, lazy, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTabState } from '@/hooks/useTabState';
 import { useScreenTracking } from '@/hooks/useAnalytics';
 import { Tab } from '@/contexts/TabContext';
-import { Loader2, Plus, ArrowLeft } from 'lucide-react';
+import { Loader2, Plus, ArrowLeft, Code, Terminal } from 'lucide-react';
 import { api, type Project, type Session, type ClaudeMdFile } from '@/lib/api';
 import { ProjectList } from '@/components/ProjectList';
 import { SessionList } from '@/components/SessionList';
 import { Button } from '@/components/ui/button';
+import { getIDEPreference, getIDECommand } from '@/components/ClickableFilePath';
+import { useToast } from '@/hooks/use-toast';
 
 // Lazy load heavy components
 const ClaudeCodeSession = lazy(() => import('@/components/ClaudeCodeSession').then(m => ({ default: m.ClaudeCodeSession })));
@@ -30,11 +32,12 @@ interface TabPanelProps {
 
 const TabPanel: React.FC<TabPanelProps> = ({ tab, isActive }) => {
   const { updateTab } = useTabState();
+  const { toast } = useToast();
   const [projects, setProjects] = React.useState<Project[]>([]);
   const [selectedProject, setSelectedProject] = React.useState<Project | null>(null);
   const [sessions, setSessions] = React.useState<Session[]>([]);
   const [loading, setLoading] = React.useState(false);
-  
+
   // Track screen when tab becomes active
   useScreenTracking(isActive ? tab.type : undefined, isActive ? tab.id : undefined);
   const [error, setError] = React.useState<string | null>(null);
@@ -128,7 +131,67 @@ const TabPanel: React.FC<TabPanelProps> = ({ tab, isActive }) => {
       });
     }
   };
-  
+
+  // Open project in IDE
+  const handleOpenInEditor = useCallback(async (projectPath: string) => {
+    try {
+      const ide = getIDEPreference();
+      const ideCommand = getIDECommand(ide);
+
+      const { Command } = await import("@tauri-apps/plugin-shell");
+      const command = Command.create(ideCommand, [projectPath]);
+      await command.execute();
+
+      toast({
+        title: "Opening in IDE",
+        description: `Opening project in ${ide}...`,
+      });
+    } catch (error) {
+      console.error("Failed to open in IDE:", error);
+      toast({
+        title: "Error",
+        description: "Failed to open project in IDE. Make sure your IDE is installed and in PATH.",
+        variant: "destructive",
+      });
+    }
+  }, [toast]);
+
+  // Open project in terminal
+  const handleOpenInTerminal = useCallback(async (projectPath: string) => {
+    try {
+      const { Command } = await import("@tauri-apps/plugin-shell");
+
+      // Detect OS and use appropriate terminal command
+      const platform = navigator.platform.toLowerCase();
+      let command;
+
+      if (platform.includes('mac') || platform.includes('darwin')) {
+        // macOS: open Terminal.app
+        command = Command.create("open", ["-a", "Terminal", projectPath]);
+      } else if (platform.includes('win')) {
+        // Windows: open cmd in directory
+        command = Command.create("cmd", ["/c", "start", "cmd", "/k", `cd /d "${projectPath}"`]);
+      } else {
+        // Linux: try common terminals
+        command = Command.create("x-terminal-emulator", ["--working-directory", projectPath]);
+      }
+
+      await command.execute();
+
+      toast({
+        title: "Opening Terminal",
+        description: "Opening project directory in terminal...",
+      });
+    } catch (error) {
+      console.error("Failed to open terminal:", error);
+      toast({
+        title: "Error",
+        description: "Failed to open terminal. Please try manually.",
+        variant: "destructive",
+      });
+    }
+  }, [toast]);
+
   // Panel visibility - hide when not active
   const panelVisibilityClass = isActive ? "" : "hidden";
   
@@ -174,18 +237,53 @@ const TabPanel: React.FC<TabPanelProps> = ({ tab, isActive }) => {
                             </p>
                           </div>
                         </div>
-                        <motion.div
-                          whileTap={{ scale: 0.97 }}
-                          transition={{ duration: 0.15 }}
-                        >
-                          <Button
-                            onClick={handleNewSession}
-                            size="default"
+                        <div className="flex items-center gap-2">
+                          {/* Open in Editor button */}
+                          <motion.div
+                            whileTap={{ scale: 0.97 }}
+                            transition={{ duration: 0.15 }}
                           >
-                            <Plus className="mr-2 h-4 w-4" />
-                            New session
-                          </Button>
-                        </motion.div>
+                            <Button
+                              variant="outline"
+                              size="icon"
+                              onClick={() => handleOpenInEditor(selectedProject.path)}
+                              title="Open in Editor"
+                              className="h-9 w-9"
+                            >
+                              <Code className="h-4 w-4" />
+                            </Button>
+                          </motion.div>
+
+                          {/* Open in Terminal button */}
+                          <motion.div
+                            whileTap={{ scale: 0.97 }}
+                            transition={{ duration: 0.15 }}
+                          >
+                            <Button
+                              variant="outline"
+                              size="icon"
+                              onClick={() => handleOpenInTerminal(selectedProject.path)}
+                              title="Open in Terminal"
+                              className="h-9 w-9"
+                            >
+                              <Terminal className="h-4 w-4" />
+                            </Button>
+                          </motion.div>
+
+                          {/* New session button */}
+                          <motion.div
+                            whileTap={{ scale: 0.97 }}
+                            transition={{ duration: 0.15 }}
+                          >
+                            <Button
+                              onClick={handleNewSession}
+                              size="default"
+                            >
+                              <Plus className="mr-2 h-4 w-4" />
+                              New session
+                            </Button>
+                          </motion.div>
+                        </div>
                       </div>
                     </div>
 

@@ -157,7 +157,13 @@
       "startupIntroDesc": "앱 실행 시 간단한 환영 애니메이션 표시",
       "startupIntroEnabled": "환영 인트로 활성화됨",
       "startupIntroDisabled": "환영 인트로 비활성화됨",
-      "binaryPathChanged": "설정을 저장하면 변경사항이 적용됩니다."
+      "binaryPathChanged": "설정을 저장하면 변경사항이 적용됩니다.",
+      "idePreference": "선호 IDE",
+      "idePreferenceDesc": "메시지의 파일 경로를 클릭할 때 열 IDE 선택",
+      "idePreferenceChanged": "IDE 설정이 {{ide}}(으)로 업데이트되었습니다",
+      "fontSize": "글꼴 크기",
+      "fontSizeDesc": "애플리케이션의 전역 글꼴 크기 조정",
+      "fontSizeDefault": "기본값"
     },
     "permissions": {
       "title": "권한 규칙",

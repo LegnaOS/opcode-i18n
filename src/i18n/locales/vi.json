@@ -157,7 +157,13 @@
       "startupIntroDesc": "Hiển thị hoạt ảnh chào mừng ngắn khi ứng dụng khởi chạy",
       "startupIntroEnabled": "Đã bật giới thiệu chào mừng",
       "startupIntroDisabled": "Đã tắt giới thiệu chào mừng",
-      "binaryPathChanged": "Thay đổi sẽ được áp dụng khi bạn lưu cài đặt."
+      "binaryPathChanged": "Thay đổi sẽ được áp dụng khi bạn lưu cài đặt.",
+      "idePreference": "IDE ưa thích",
+      "idePreferenceDesc": "Chọn IDE để mở tệp khi nhấp vào đường dẫn tệp trong tin nhắn",
+      "idePreferenceChanged": "Tùy chọn IDE đã cập nhật thành {{ide}}",
+      "fontSize": "Cỡ chữ",
+      "fontSizeDesc": "Điều chỉnh cỡ chữ toàn cục của ứng dụng",
+      "fontSizeDefault": "Mặc định"
     },
     "permissions": {
       "title": "Quy tắc quyền",

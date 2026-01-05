@@ -157,7 +157,13 @@
       "startupIntroDesc": "Mostrar una breve animación de bienvenida cuando se inicia la aplicación",
       "startupIntroEnabled": "Introducción de bienvenida habilitada",
       "startupIntroDisabled": "Introducción de bienvenida deshabilitada",
-      "binaryPathChanged": "Los cambios se aplicarán cuando guardes la configuración."
+      "binaryPathChanged": "Los cambios se aplicarán cuando guardes la configuración.",
+      "idePreference": "IDE preferido",
+      "idePreferenceDesc": "Elige el IDE para abrir archivos al hacer clic en rutas de archivos en mensajes",
+      "idePreferenceChanged": "Preferencia de IDE actualizada a {{ide}}",
+      "fontSize": "Tamaño de fuente",
+      "fontSizeDesc": "Ajustar el tamaño de fuente global de la aplicación",
+      "fontSizeDefault": "Predeterminado"
     },
     "permissions": {
       "title": "Reglas de permisos",

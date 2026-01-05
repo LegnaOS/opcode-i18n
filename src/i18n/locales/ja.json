@@ -157,7 +157,13 @@
       "startupIntroDesc": "アプリ起動時に短いウェルカムアニメーションを表示",
       "startupIntroEnabled": "ウェルカム画面が有効",
       "startupIntroDisabled": "ウェルカム画面が無効",
-      "binaryPathChanged": "変更は設定保存時に適用されます。"
+      "binaryPathChanged": "変更は設定保存時に適用されます。",
+      "idePreference": "優先IDE",
+      "idePreferenceDesc": "メッセージ内のファイルパスをクリックした時に開くIDEを選択",
+      "idePreferenceChanged": "IDE設定が{{ide}}に更新されました",
+      "fontSize": "フォントサイズ",
+      "fontSizeDesc": "アプリケーションのグローバルフォントサイズを調整",
+      "fontSizeDefault": "デフォルト"
     },
     "permissions": {
       "title": "権限ルール",

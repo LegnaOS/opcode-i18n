@@ -160,7 +160,10 @@
       "binaryPathChanged": "保存设置后更改将生效。",
       "idePreference": "首选 IDE",
       "idePreferenceDesc": "选择点击消息中文件路径时打开的 IDE",
-      "idePreferenceChanged": "IDE 首选项已更新为 {{ide}}"
+      "idePreferenceChanged": "IDE 首选项已更新为 {{ide}}",
+      "fontSize": "字体大小",
+      "fontSizeDesc": "调整应用程序的全局字体大小",
+      "fontSizeDefault": "默认"
     },
     "permissions": {
       "title": "权限规则",

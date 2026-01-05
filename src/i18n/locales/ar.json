@@ -157,7 +157,13 @@
       "startupIntroDesc": "عرض شاشة الترحيب عند بدء التطبيق",
       "startupIntroEnabled": "مقدمة البدء مفعلة",
       "startupIntroDisabled": "مقدمة البدء معطلة",
-      "binaryPathChanged": "سيتم تطبيق التغييرات عند حفظ الإعدادات."
+      "binaryPathChanged": "سيتم تطبيق التغييرات عند حفظ الإعدادات.",
+      "idePreference": "بيئة التطوير المفضلة",
+      "idePreferenceDesc": "اختر بيئة التطوير لفتح الملفات عند النقر على مسارات الملفات في الرسائل",
+      "idePreferenceChanged": "تم تحديث تفضيل بيئة التطوير إلى {{ide}}",
+      "fontSize": "حجم الخط",
+      "fontSizeDesc": "ضبط حجم الخط العام للتطبيق",
+      "fontSizeDefault": "افتراضي"
     },
     "permissions": {
       "title": "قواعد الصلاحيات",

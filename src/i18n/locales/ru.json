@@ -157,7 +157,13 @@
       "startupIntroDesc": "Отображать краткую анимацию приветствия при запуске приложения",
       "startupIntroEnabled": "Приветствие включено",
       "startupIntroDisabled": "Приветствие отключено",
-      "binaryPathChanged": "Изменения будут применены при сохранении настроек."
+      "binaryPathChanged": "Изменения будут применены при сохранении настроек.",
+      "idePreference": "Предпочтительная IDE",
+      "idePreferenceDesc": "Выберите IDE для открытия файлов при нажатии на пути к файлам в сообщениях",
+      "idePreferenceChanged": "Настройка IDE обновлена на {{ide}}",
+      "fontSize": "Размер шрифта",
+      "fontSizeDesc": "Настройка глобального размера шрифта приложения",
+      "fontSizeDefault": "По умолчанию"
     },
     "permissions": {
       "title": "Правила разрешений",

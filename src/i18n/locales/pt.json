@@ -157,7 +157,13 @@
       "startupIntroDesc": "Mostrar uma breve animação de boas-vindas quando o aplicativo iniciar",
       "startupIntroEnabled": "Introdução de boas-vindas ativada",
       "startupIntroDisabled": "Introdução de boas-vindas desativada",
-      "binaryPathChanged": "As alterações serão aplicadas quando você salvar as configurações."
+      "binaryPathChanged": "As alterações serão aplicadas quando você salvar as configurações.",
+      "idePreference": "IDE preferido",
+      "idePreferenceDesc": "Escolha o IDE para abrir arquivos ao clicar em caminhos de arquivos nas mensagens",
+      "idePreferenceChanged": "Preferência de IDE atualizada para {{ide}}",
+      "fontSize": "Tamanho da fonte",
+      "fontSizeDesc": "Ajustar o tamanho da fonte global do aplicativo",
+      "fontSizeDefault": "Padrão"
     },
     "permissions": {
       "title": "Regras de permissões",

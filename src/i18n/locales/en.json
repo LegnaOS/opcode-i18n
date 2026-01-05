@@ -160,7 +160,10 @@
       "binaryPathChanged": "Changes will be applied when you save settings.",
       "idePreference": "Preferred IDE",
       "idePreferenceDesc": "Choose the IDE to open files when clicking file paths in messages",
-      "idePreferenceChanged": "IDE preference updated to {{ide}}"
+      "idePreferenceChanged": "IDE preference updated to {{ide}}",
+      "fontSize": "Font Size",
+      "fontSizeDesc": "Adjust the global font size for the application",
+      "fontSizeDefault": "Default"
     },
     "permissions": {
       "title": "Permission Rules",

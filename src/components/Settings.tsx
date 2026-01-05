@@ -30,6 +30,7 @@ import { SlashCommandsManager } from "./SlashCommandsManager";
 import { ProxySettings } from "./ProxySettings";
 import { LanguageSelector } from "./LanguageSelector";
 import { useTheme, useTrackEvent } from "@/hooks";
+import type { FontSizeScale } from "@/contexts/ThemeContext";
 import { analytics } from "@/lib/analytics";
 import { TabPersistenceService } from "@/services/tabPersistence";
 
@@ -85,7 +86,7 @@ export const Settings: React.FC<SettingsProps> = ({
   const getUserHooks = React.useRef<(() => any) | null>(null);
   
   // Theme hook
-  const { theme, setTheme, customColors, setCustomColors } = useTheme();
+  const { theme, setTheme, customColors, setCustomColors, fontSize, setFontSize } = useTheme();
   
   // Proxy state
   const [proxySettingsChanged, setProxySettingsChanged] = useState(false);
@@ -476,7 +477,36 @@ export const Settings: React.FC<SettingsProps> = ({
                     
                     {/* Language Selector */}
                     <LanguageSelector />
-                    
+
+                    {/* Font Size Selector */}
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <Label>{t("settings.general.fontSize")}</Label>
+                        <p className="text-caption text-muted-foreground mt-1">
+                          {t("settings.general.fontSizeDesc")}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs text-muted-foreground w-8 text-right">{fontSize}%</span>
+                        <div className="flex items-center gap-1 p-1 bg-muted/30 rounded-lg">
+                          {([75, 85, 90, 100, 110, 125, 150] as FontSizeScale[]).map((size) => (
+                            <button
+                              key={size}
+                              onClick={() => setFontSize(size)}
+                              className={cn(
+                                "px-2 py-1 text-xs font-medium rounded-md transition-all min-w-[36px]",
+                                fontSize === size
+                                  ? "bg-background shadow-sm"
+                                  : "hover:bg-background/50"
+                              )}
+                            >
+                              {size === 100 ? t("settings.general.fontSizeDefault") : `${size}%`}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+
                     {/* Custom Color Editor */}
                     {theme === 'custom' && (
                       <div className="space-y-4 p-4 border rounded-lg bg-muted/20">

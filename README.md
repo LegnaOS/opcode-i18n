@@ -72,6 +72,7 @@ Think of opcode as your command center for Claude Code - bridging the gap betwee
 - **Session History**: View and resume past coding sessions with full context
 - **Smart Search**: Find projects and sessions quickly with built-in search
 - **Session Insights**: See first messages, timestamps, and session metadata at a glance
+- **Quick Actions**: Open projects directly in your preferred IDE or terminal with one click
 
 ### 🤖 **CC Agents**
 - **Custom AI Agents**: Create specialized agents with custom system prompts and behaviors
@@ -105,6 +106,13 @@ Think of opcode as your command center for Claude Code - bridging the gap betwee
 - **Live Preview**: See your markdown rendered in real-time
 - **Project Scanner**: Find all CLAUDE.md files in your projects
 - **Syntax Highlighting**: Full markdown support with syntax highlighting
+
+### 🎨 **Customization & Accessibility**
+- **Multi-language Support**: Available in 12 languages (English, 中文, 日本語, 한국어, Deutsch, Français, Español, Português, Русский, العربية, Tiếng Việt, 繁體中文)
+- **Theme Options**: Choose from Dark, Gray, Light themes or create your own custom theme
+- **Font Size Scaling**: Adjust global font size (75% - 150%) for better readability on high-resolution displays
+- **IDE Integration**: Click file paths to open directly in VS Code, Cursor, Windsurf, Zed, and more
+- **Clickable File Paths**: All file paths in tool outputs are clickable, jumping to the exact line in your IDE
 
 ## 📖 Usage
 

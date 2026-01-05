@@ -1,20 +1,24 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import { motion } from 'framer-motion';
-import { 
-  ArrowLeft, 
-  Terminal, 
-  FolderOpen, 
-  Copy, 
+import {
+  ArrowLeft,
+  Terminal,
+  FolderOpen,
+  Copy,
   GitBranch,
   Settings,
   Hash,
-  Command
+  Command,
+  Code,
+  ExternalLink
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Popover } from '@/components/ui/popover';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
+import { getIDEPreference, getIDECommand } from '@/components/ClickableFilePath';
+import { useToast } from '@/hooks/use-toast';
 
 interface SessionHeaderProps {
   projectPath: string;
@@ -51,6 +55,66 @@ export const SessionHeader: React.FC<SessionHeaderProps> = React.memo(({
   onSlashCommandsSettings,
   setCopyPopoverOpen
 }) => {
+  const { toast } = useToast();
+
+  // Open project in IDE
+  const handleOpenInEditor = useCallback(async () => {
+    if (!projectPath) return;
+    try {
+      const ide = getIDEPreference();
+      const ideCommand = getIDECommand(ide);
+
+      const { Command } = await import("@tauri-apps/plugin-shell");
+      const command = Command.create(ideCommand, [projectPath]);
+      await command.execute();
+
+      toast({
+        title: "Opening in IDE",
+        description: `Opening project in ${ide}...`,
+      });
+    } catch (error) {
+      console.error("Failed to open in IDE:", error);
+      toast({
+        title: "Error",
+        description: "Failed to open project in IDE",
+        variant: "destructive",
+      });
+    }
+  }, [projectPath, toast]);
+
+  // Open project in terminal
+  const handleOpenInTerminal = useCallback(async () => {
+    if (!projectPath) return;
+    try {
+      const { Command } = await import("@tauri-apps/plugin-shell");
+
+      const platform = navigator.platform.toLowerCase();
+      let command;
+
+      if (platform.includes('mac') || platform.includes('darwin')) {
+        command = Command.create("open", ["-a", "Terminal", projectPath]);
+      } else if (platform.includes('win')) {
+        command = Command.create("cmd", ["/c", "start", "cmd", "/k", `cd /d "${projectPath}"`]);
+      } else {
+        command = Command.create("x-terminal-emulator", ["--working-directory", projectPath]);
+      }
+
+      await command.execute();
+
+      toast({
+        title: "Opening Terminal",
+        description: "Opening project directory in terminal...",
+      });
+    } catch (error) {
+      console.error("Failed to open terminal:", error);
+      toast({
+        title: "Error",
+        description: "Failed to open terminal",
+        variant: "destructive",
+      });
+    }
+  }, [projectPath, toast]);
+
   return (
     <motion.div 
       initial={{ opacity: 0, y: -20 }}
@@ -154,6 +218,18 @@ export const SessionHeader: React.FC<SessionHeaderProps> = React.memo(({
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-48">
+              {projectPath && (
+                <>
+                  <DropdownMenuItem onClick={handleOpenInEditor}>
+                    <Code className="h-4 w-4 mr-2" />
+                    Open in Editor
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={handleOpenInTerminal}>
+                    <Terminal className="h-4 w-4 mr-2" />
+                    Open in Terminal
+                  </DropdownMenuItem>
+                </>
+              )}
               {onProjectSettings && projectPath && (
                 <DropdownMenuItem onClick={onProjectSettings}>
                   <Settings className="h-4 w-4 mr-2" />

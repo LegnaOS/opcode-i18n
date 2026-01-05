@@ -157,7 +157,13 @@
       "startupIntroDesc": "應用程式啟動時顯示簡短的歡迎動畫",
       "startupIntroEnabled": "歡迎動畫已啟用",
       "startupIntroDisabled": "歡迎動畫已停用",
-      "binaryPathChanged": "儲存設定後變更將生效。"
+      "binaryPathChanged": "儲存設定後變更將生效。",
+      "idePreference": "偏好 IDE",
+      "idePreferenceDesc": "選擇點擊訊息中檔案路徑時開啟的 IDE",
+      "idePreferenceChanged": "IDE 偏好設定已更新為 {{ide}}",
+      "fontSize": "字體大小",
+      "fontSizeDesc": "調整應用程式的全域字體大小",
+      "fontSizeDefault": "預設"
     },
     "permissions": {
       "title": "權限規則",

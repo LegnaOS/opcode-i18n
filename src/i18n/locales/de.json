@@ -157,7 +157,13 @@
       "startupIntroDesc": "Eine kurze Begrüßungsanimation beim App-Start anzeigen",
       "startupIntroEnabled": "Begrüßungs-Intro aktiviert",
       "startupIntroDisabled": "Begrüßungs-Intro deaktiviert",
-      "binaryPathChanged": "Änderungen werden beim Speichern der Einstellungen übernommen."
+      "binaryPathChanged": "Änderungen werden beim Speichern der Einstellungen übernommen.",
+      "idePreference": "Bevorzugte IDE",
+      "idePreferenceDesc": "Wählen Sie die IDE zum Öffnen von Dateien beim Klicken auf Dateipfade in Nachrichten",
+      "idePreferenceChanged": "IDE-Einstellung auf {{ide}} aktualisiert",
+      "fontSize": "Schriftgröße",
+      "fontSizeDesc": "Globale Schriftgröße der Anwendung anpassen",
+      "fontSizeDefault": "Standard"
     },
     "permissions": {
       "title": "Berechtigungsregeln",

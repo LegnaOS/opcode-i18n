@@ -3,6 +3,9 @@ import { api } from '../lib/api';
 
 export type ThemeMode = 'dark' | 'gray' | 'light' | 'custom';
 
+// Font size scale options (percentage)
+export type FontSizeScale = 75 | 85 | 90 | 100 | 110 | 125 | 150;
+
 export interface CustomThemeColors {
   background: string;
   foreground: string;
@@ -26,8 +29,10 @@ export interface CustomThemeColors {
 interface ThemeContextType {
   theme: ThemeMode;
   customColors: CustomThemeColors;
+  fontSize: FontSizeScale;
   setTheme: (theme: ThemeMode) => Promise<void>;
   setCustomColors: (colors: Partial<CustomThemeColors>) => Promise<void>;
+  setFontSize: (size: FontSizeScale) => Promise<void>;
   isLoading: boolean;
 }
 
@@ -35,6 +40,10 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 const THEME_STORAGE_KEY = 'theme_preference';
 const CUSTOM_COLORS_STORAGE_KEY = 'theme_custom_colors';
+const FONT_SIZE_STORAGE_KEY = 'font_size_scale';
+
+// Default font size (100%)
+const DEFAULT_FONT_SIZE: FontSizeScale = 100;
 
 // Default custom theme colors (based on current dark theme)
 const DEFAULT_CUSTOM_COLORS: CustomThemeColors = {
@@ -60,15 +69,25 @@ const DEFAULT_CUSTOM_COLORS: CustomThemeColors = {
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [theme, setThemeState] = useState<ThemeMode>('gray');
   const [customColors, setCustomColorsState] = useState<CustomThemeColors>(DEFAULT_CUSTOM_COLORS);
+  const [fontSize, setFontSizeState] = useState<FontSizeScale>(DEFAULT_FONT_SIZE);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Load theme preference and custom colors from storage
+  // Apply font size to document
+  const applyFontSize = useCallback((size: FontSizeScale) => {
+    const root = document.documentElement;
+    // Set the font size scale as a CSS variable
+    root.style.setProperty('--font-scale', `${size / 100}`);
+    // Apply the scale to the root font size (base 16px)
+    root.style.fontSize = `${16 * (size / 100)}px`;
+  }, []);
+
+  // Load theme preference, custom colors, and font size from storage
   useEffect(() => {
     const loadTheme = async () => {
       try {
         // Load theme preference
         const savedTheme = await api.getSetting(THEME_STORAGE_KEY);
-        
+
         if (savedTheme) {
           const themeMode = savedTheme as ThemeMode;
           setThemeState(themeMode);
@@ -81,13 +100,23 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
         // Load custom colors
         const savedColors = await api.getSetting(CUSTOM_COLORS_STORAGE_KEY);
-        
+
         if (savedColors) {
           const colors = JSON.parse(savedColors) as CustomThemeColors;
           setCustomColorsState(colors);
           if (theme === 'custom') {
             await applyTheme('custom', colors);
           }
+        }
+
+        // Load font size
+        const savedFontSize = await api.getSetting(FONT_SIZE_STORAGE_KEY);
+        if (savedFontSize) {
+          const size = parseInt(savedFontSize, 10) as FontSizeScale;
+          setFontSizeState(size);
+          applyFontSize(size);
+        } else {
+          applyFontSize(DEFAULT_FONT_SIZE);
         }
       } catch (error) {
         console.error('Failed to load theme settings:', error);
@@ -146,15 +175,15 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const setCustomColors = useCallback(async (colors: Partial<CustomThemeColors>) => {
     try {
       setIsLoading(true);
-      
+
       const newColors = { ...customColors, ...colors };
       setCustomColorsState(newColors);
-      
+
       // Apply immediately if custom theme is active
       if (theme === 'custom') {
         await applyTheme('custom', newColors);
       }
-      
+
       // Save to storage
       await api.saveSetting(CUSTOM_COLORS_STORAGE_KEY, JSON.stringify(newColors));
     } catch (error) {
@@ -164,11 +193,30 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
   }, [theme, customColors, applyTheme]);
 
+  const setFontSize = useCallback(async (size: FontSizeScale) => {
+    try {
+      setIsLoading(true);
+
+      // Apply immediately
+      setFontSizeState(size);
+      applyFontSize(size);
+
+      // Save to storage
+      await api.saveSetting(FONT_SIZE_STORAGE_KEY, String(size));
+    } catch (error) {
+      console.error('Failed to save font size:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [applyFontSize]);
+
   const value: ThemeContextType = {
     theme,
     customColors,
+    fontSize,
     setTheme,
     setCustomColors,
+    setFontSize,
     isLoading,
   };
 
