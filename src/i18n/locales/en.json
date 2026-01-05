@@ -157,7 +157,10 @@
       "startupIntroDesc": "Display a brief welcome animation when the app launches",
       "startupIntroEnabled": "Welcome intro enabled",
       "startupIntroDisabled": "Welcome intro disabled",
-      "binaryPathChanged": "Changes will be applied when you save settings."
+      "binaryPathChanged": "Changes will be applied when you save settings.",
+      "idePreference": "Preferred IDE",
+      "idePreferenceDesc": "Choose the IDE to open files when clicking file paths in messages",
+      "idePreferenceChanged": "IDE preference updated to {{ide}}"
     },
     "permissions": {
       "title": "Permission Rules",

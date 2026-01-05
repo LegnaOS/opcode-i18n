@@ -157,7 +157,10 @@
       "startupIntroDesc": "应用启动时显示简短的欢迎动画",
       "startupIntroEnabled": "欢迎动画已启用",
       "startupIntroDisabled": "欢迎动画已禁用",
-      "binaryPathChanged": "保存设置后更改将生效。"
+      "binaryPathChanged": "保存设置后更改将生效。",
+      "idePreference": "首选 IDE",
+      "idePreferenceDesc": "选择点击消息中文件路径时打开的 IDE",
+      "idePreferenceChanged": "IDE 首选项已更新为 {{ide}}"
     },
     "permissions": {
       "title": "权限规则",

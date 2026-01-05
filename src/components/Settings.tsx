@@ -673,6 +673,35 @@ export const Settings: React.FC<SettingsProps> = ({
                       )}
                     </div>
 
+                    {/* IDE Preference Selector */}
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <div className="flex-1">
+                          <Label htmlFor="ide-preference">{t("settings.general.idePreference")}</Label>
+                          <p className="text-caption text-muted-foreground mt-1">
+                            {t("settings.general.idePreferenceDesc")}
+                          </p>
+                        </div>
+                        <select
+                          id="ide-preference"
+                          value={idePreference}
+                          onChange={(e) => {
+                            const newIde = e.target.value as IDEOption;
+                            setIdePreferenceState(newIde);
+                            setIDEPreference(newIde);
+                            setToast({ message: t("settings.general.idePreferenceChanged", { ide: IDE_OPTIONS.find(o => o.id === newIde)?.name }), type: "success" });
+                          }}
+                          className="w-40 h-9 px-3 rounded-md border border-input bg-background text-sm"
+                        >
+                          {IDE_OPTIONS.map((option) => (
+                            <option key={option.id} value={option.id}>
+                              {option.name}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+
                     {/* Separator */}
                     <div className="border-t border-border pt-4 mt-6" />
 

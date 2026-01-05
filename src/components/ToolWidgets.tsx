@@ -63,6 +63,7 @@ import { open } from "@tauri-apps/plugin-shell";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { motion, AnimatePresence } from "framer-motion";
+import { ClickableFilePath } from "./ClickableFilePath";
 
 /**
  * Widget for TodoWrite tool - displays a beautiful TODO list
@@ -370,22 +371,18 @@ export const ReadWidget: React.FC<{ filePath: string; result?: any }> = ({ fileP
         <div className="flex items-center gap-2 p-3 rounded-lg bg-muted/50">
           <FileText className="h-4 w-4 text-primary" />
           <span className="text-sm">File content:</span>
-          <code className="text-sm font-mono bg-background px-2 py-0.5 rounded flex-1 truncate">
-            {filePath}
-          </code>
+          <ClickableFilePath filePath={filePath} showFullPath className="flex-1" />
         </div>
         {resultContent && <ReadResultWidget content={resultContent} filePath={filePath} />}
       </div>
     );
   }
-  
+
   return (
     <div className="flex items-center gap-2 p-3 rounded-lg bg-muted/50">
       <FileText className="h-4 w-4 text-primary" />
       <span className="text-sm">Reading file:</span>
-      <code className="text-sm font-mono bg-background px-2 py-0.5 rounded flex-1 truncate">
-        {filePath}
-      </code>
+      <ClickableFilePath filePath={filePath} showFullPath className="flex-1" />
       {!result && (
         <div className="ml-auto flex items-center gap-1 text-xs text-muted-foreground">
           <div className="h-2 w-2 bg-blue-500 rounded-full animate-pulse" />
@@ -765,7 +762,7 @@ export const WriteWidget: React.FC<{ filePath: string; content: string; result?:
           <div className="px-6 py-4 border-b bg-background flex items-center justify-between">
             <div className="flex items-center gap-3">
               <FileText className="h-4 w-4 text-muted-foreground" />
-              <span className="text-sm font-mono text-muted-foreground">{filePath}</span>
+              <ClickableFilePath filePath={filePath} showFullPath />
             </div>
             <Button 
               variant="ghost" 
@@ -854,9 +851,7 @@ export const WriteWidget: React.FC<{ filePath: string; content: string; result?:
       <div className="flex items-center gap-2 p-3 rounded-lg bg-muted/50">
         <FileEdit className="h-4 w-4 text-primary" />
         <span className="text-sm">Writing to file:</span>
-        <code className="text-sm font-mono bg-background px-2 py-0.5 rounded flex-1 truncate">
-          {filePath}
-        </code>
+        <ClickableFilePath filePath={filePath} showFullPath className="flex-1" />
       </div>
       <CodePreview codeContent={displayContent} truncated={true} />
       <MaximizedView />
@@ -1022,12 +1017,9 @@ export const GrepWidget: React.FC<{
                 <div className="rounded-lg border bg-background overflow-hidden">
                   <div className="max-h-[400px] overflow-y-auto">
                     {grepResults.map((match, idx) => {
-                      const fileName = match.file.split('/').pop() || match.file;
-                      const dirPath = match.file.substring(0, match.file.lastIndexOf('/'));
-                      
                       return (
-                        <div 
-                          key={idx} 
+                        <div
+                          key={idx}
                           className={cn(
                             "flex items-start gap-3 p-3 border-b border-border hover:bg-muted/50 transition-colors",
                             idx === grepResults.length - 1 && "border-b-0"
@@ -1039,18 +1031,13 @@ export const GrepWidget: React.FC<{
                               {match.lineNumber}
                             </span>
                           </div>
-                          
+
                           <div className="flex-1 space-y-1 min-w-0">
-                            <div className="flex items-center gap-2">
-                              <span className="text-xs font-medium text-blue-400 truncate">
-                                {fileName}
-                              </span>
-                              {dirPath && (
-                                <span className="text-xs text-muted-foreground truncate">
-                                  {dirPath}
-                                </span>
-                              )}
-                            </div>
+                            <ClickableFilePath
+                              filePath={match.file}
+                              lineNumber={match.lineNumber}
+                              className="text-blue-400"
+                            />
                             <code className="text-xs font-mono text-zinc-300 block whitespace-pre-wrap break-all">
                               {match.content.trim()}
                             </code>
@@ -1140,9 +1127,7 @@ export const EditWidget: React.FC<{
       <div className="flex items-center gap-2 mb-2">
         <FileEdit className="h-4 w-4 text-primary" />
         <span className="text-sm font-medium">Applying Edit to:</span>
-        <code className="text-sm font-mono bg-background px-2 py-0.5 rounded flex-1 truncate">
-          {file_path}
-        </code>
+        <ClickableFilePath filePath={file_path} showFullPath className="flex-1" />
       </div>
 
       <div className="rounded-lg border bg-background overflow-hidden text-xs font-mono">
@@ -1248,7 +1233,7 @@ export const EditResultWidget: React.FC<{ content: string }> = ({ content }) => 
         {filePath && (
           <>
             <ChevronRight className="h-3 w-3 text-muted-foreground" />
-            <span className="text-xs font-mono text-muted-foreground">{filePath}</span>
+            <ClickableFilePath filePath={filePath} lineNumber={startLineNumber} />
           </>
         )}
       </div>
@@ -1609,7 +1594,7 @@ export const MultiEditWidget: React.FC<{
       <div className="ml-6 space-y-2">
         <div className="flex items-center gap-2">
           <FileText className="h-3 w-3 text-blue-500" />
-          <code className="text-xs font-mono text-blue-500">{file_path}</code>
+          <ClickableFilePath filePath={file_path} showFullPath className="text-blue-500" />
         </div>
         
         <div className="space-y-1">
