@@ -341,13 +341,20 @@ const FloatingPromptInputInner = (
     return uniquePaths;
   };
 
-  // Update embedded images when prompt changes
+  // Update embedded images when prompt changes (only for file path images, not pasted base64)
   useEffect(() => {
-    console.log('[useEffect] Prompt changed:', prompt);
-    const imagePaths = extractImagePaths(prompt);
-    console.log('[useEffect] Setting embeddedImages to:', imagePaths);
-    setEmbeddedImages(imagePaths);
-    
+    console.log('[useEffect] Prompt changed');
+    const fileImagePaths = extractImagePaths(prompt);
+    console.log('[useEffect] File image paths from prompt:', fileImagePaths);
+
+    // Merge file image paths with existing pasted images (base64)
+    setEmbeddedImages(prev => {
+      const pastedImages = prev.filter(img => img.startsWith('data:'));
+      // Combine pasted images with file paths, avoiding duplicates
+      const combined = [...pastedImages, ...fileImagePaths.filter(p => !p.startsWith('data:'))];
+      return combined;
+    });
+
     // Auto-resize on prompt change (handles paste, programmatic changes, etc.)
     if (textareaRef.current && !isExpanded) {
       textareaRef.current.style.height = 'auto';
@@ -697,8 +704,19 @@ const FloatingPromptInputInner = (
       return;
     }
 
-    if (prompt.trim() && !disabled) {
+    // Allow sending if we have either text or pasted images
+    const hasText = prompt.trim().length > 0;
+    const hasPastedImages = embeddedImages.some(img => img.startsWith('data:'));
+
+    if ((hasText || hasPastedImages) && !disabled) {
       let finalPrompt = prompt.trim();
+
+      // Append pasted images (base64) to the prompt
+      const pastedImages = embeddedImages.filter(img => img.startsWith('data:'));
+      if (pastedImages.length > 0) {
+        const imagesMentions = pastedImages.map(img => `@"${img}"`).join(' ');
+        finalPrompt = finalPrompt + (finalPrompt ? ' ' : '') + imagesMentions;
+      }
 
       // Append thinking phrase if not auto mode
       const thinkingMode = THINKING_MODES.find(m => m.id === selectedThinkingMode);
@@ -735,10 +753,10 @@ const FloatingPromptInputInner = (
       return;
     }
 
+    // Send with Ctrl+Enter or Cmd+Enter (not just Enter to avoid accidental sends)
     if (
       e.key === "Enter" &&
-      !e.shiftKey &&
-      !isExpanded &&
+      (e.ctrlKey || e.metaKey) &&
       !showFilePicker &&
       !showSlashCommandPicker
     ) {
@@ -757,7 +775,7 @@ const FloatingPromptInputInner = (
     for (const item of items) {
       if (item.type.startsWith('image/')) {
         e.preventDefault();
-        
+
         // Get the image blob
         const blob = item.getAsFile();
         if (!blob) continue;
@@ -767,24 +785,21 @@ const FloatingPromptInputInner = (
           const reader = new FileReader();
           reader.onload = () => {
             const base64Data = reader.result as string;
-            
-            // Add the base64 data URL directly to the prompt
-            setPrompt(currentPrompt => {
-              // Use the data URL directly as the image reference
-              const mention = `@"${base64Data}"`;
-              const newPrompt = currentPrompt + (currentPrompt.endsWith(' ') || currentPrompt === '' ? '' : ' ') + mention + ' ';
-              
-              // Focus the textarea and move cursor to end
-              setTimeout(() => {
-                const target = isExpanded ? expandedTextareaRef.current : textareaRef.current;
-                target?.focus();
-                target?.setSelectionRange(newPrompt.length, newPrompt.length);
-              }, 0);
 
-              return newPrompt;
+            // Store the base64 image separately - don't put it in the prompt text
+            setEmbeddedImages(prev => {
+              // Check if already exists
+              if (prev.includes(base64Data)) return prev;
+              return [...prev, base64Data];
             });
+
+            // Focus the textarea
+            setTimeout(() => {
+              const target = isExpanded ? expandedTextareaRef.current : textareaRef.current;
+              target?.focus();
+            }, 0);
           };
-          
+
           reader.readAsDataURL(blob);
         } catch (error) {
           console.error('Failed to paste image:', error);
@@ -808,22 +823,18 @@ const FloatingPromptInputInner = (
   };
 
   const handleRemoveImage = (index: number) => {
-    // Remove the corresponding @mention from the prompt
     const imagePath = embeddedImages[index];
-    
-    // For data URLs, we need to handle them specially since they're always quoted
+
+    // For data URLs (pasted images), just remove from the embedded images array
     if (imagePath.startsWith('data:')) {
-      // Simply remove the exact quoted data URL
-      const quotedPath = `@"${imagePath}"`;
-      const newPrompt = prompt.replace(quotedPath, '').trim();
-      setPrompt(newPrompt);
+      setEmbeddedImages(prev => prev.filter((_, i) => i !== index));
       return;
     }
-    
-    // For file paths, use the original logic
+
+    // For file paths, remove from prompt text
     const escapedPath = imagePath.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     const escapedRelativePath = imagePath.replace(projectPath + '/', '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    
+
     // Create patterns for both quoted and unquoted mentions
     const patterns = [
       // Quoted full path
@@ -1263,19 +1274,19 @@ const FloatingPromptInputInner = (
                     </motion.div>
                   </TooltipSimple>
 
-                  <TooltipSimple content={isLoading ? "Stop generation" : "Send message (Enter)"} side="top">
+                  <TooltipSimple content={isLoading ? "Stop generation" : "Send message (Ctrl+Enter)"} side="top">
                     <motion.div
                       whileTap={{ scale: 0.97 }}
                       transition={{ duration: 0.15 }}
                     >
                       <Button
                         onClick={isLoading ? onCancel : handleSend}
-                        disabled={isLoading ? false : (!prompt.trim() || disabled)}
-                        variant={isLoading ? "destructive" : prompt.trim() ? "default" : "ghost"}
+                        disabled={isLoading ? false : ((!prompt.trim() && !embeddedImages.some(img => img.startsWith('data:'))) || disabled)}
+                        variant={isLoading ? "destructive" : (prompt.trim() || embeddedImages.some(img => img.startsWith('data:'))) ? "default" : "ghost"}
                         size="icon"
                         className={cn(
                           "h-8 w-8 transition-all",
-                          prompt.trim() && !isLoading && "shadow-sm"
+                          (prompt.trim() || embeddedImages.some(img => img.startsWith('data:'))) && !isLoading && "shadow-sm"
                         )}
                       >
                         {isLoading ? (

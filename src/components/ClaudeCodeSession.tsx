@@ -146,7 +146,36 @@ export const ClaudeCodeSession: React.FC<ClaudeCodeSessionProps> = ({
   const isListeningRef = useRef(false);
   const sessionStartTime = useRef<number>(Date.now());
   const isIMEComposingRef = useRef(false);
-  
+
+  // Message batching for performance optimization
+  const messageQueueRef = useRef<ClaudeStreamMessage[]>([]);
+  const flushTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const BATCH_INTERVAL = 100; // Batch messages every 100ms
+
+  // Flush message queue to state
+  const flushMessages = React.useCallback(() => {
+    if (!isMountedRef.current) return;
+    if (messageQueueRef.current.length === 0) return;
+
+    const newMessages = [...messageQueueRef.current];
+    messageQueueRef.current = [];
+
+    setMessages(prev => [...prev, ...newMessages]);
+  }, []);
+
+  // Queue a message for batched update
+  const queueMessage = React.useCallback((message: ClaudeStreamMessage) => {
+    messageQueueRef.current.push(message);
+
+    // Schedule flush if not already scheduled
+    if (!flushTimeoutRef.current) {
+      flushTimeoutRef.current = setTimeout(() => {
+        flushTimeoutRef.current = null;
+        flushMessages();
+      }, BATCH_INTERVAL);
+    }
+  }, [flushMessages]);
+
   // Session metrics state for enhanced analytics
   const sessionMetrics = useRef({
     firstMessageTime: null as number | null,
@@ -197,9 +226,29 @@ export const ClaudeCodeSession: React.FC<ClaudeCodeSessionProps> = ({
     return null;
   }, [session, extractedSessionInfo, projectPath]);
 
-  // Filter out messages that shouldn't be displayed
+  // Build a lookup map of tool_use_id -> tool_name for O(1) lookups
+  const toolUseMap = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const msg of messages) {
+      if (msg.type === 'assistant' && msg.message?.content && Array.isArray(msg.message.content)) {
+        for (const content of msg.message.content) {
+          if (content.type === 'tool_use' && content.id) {
+            map.set(content.id, content.name?.toLowerCase() || '');
+          }
+        }
+      }
+    }
+    return map;
+  }, [messages]);
+
+  // Filter out messages that shouldn't be displayed - optimized with lookup map
   const displayableMessages = useMemo(() => {
-    return messages.filter((message, index) => {
+    const toolsWithWidgets = new Set([
+      'task', 'edit', 'multiedit', 'todowrite', 'ls', 'read',
+      'glob', 'bash', 'write', 'grep'
+    ]);
+
+    return messages.filter((message: ClaudeStreamMessage) => {
       // Skip meta messages that don't have meaningful content
       if (message.isMeta && !message.leafUuid && !message.summary) {
         return false;
@@ -221,30 +270,10 @@ export const ClaudeCodeSession: React.FC<ClaudeCodeSessionProps> = ({
               hasVisibleContent = true;
               break;
             }
-            if (content.type === "tool_result") {
-              let willBeSkipped = false;
-              if (content.tool_use_id) {
-                // Look for the matching tool_use in previous assistant messages
-                for (let i = index - 1; i >= 0; i--) {
-                  const prevMsg = messages[i];
-                  if (prevMsg.type === 'assistant' && prevMsg.message?.content && Array.isArray(prevMsg.message.content)) {
-                    const toolUse = prevMsg.message.content.find((c: any) => 
-                      c.type === 'tool_use' && c.id === content.tool_use_id
-                    );
-                    if (toolUse) {
-                      const toolName = toolUse.name?.toLowerCase();
-                      const toolsWithWidgets = [
-                        'task', 'edit', 'multiedit', 'todowrite', 'ls', 'read', 
-                        'glob', 'bash', 'write', 'grep'
-                      ];
-                      if (toolsWithWidgets.includes(toolName) || toolUse.name?.startsWith('mcp__')) {
-                        willBeSkipped = true;
-                      }
-                      break;
-                    }
-                  }
-                }
-              }
+            if (content.type === "tool_result" && content.tool_use_id) {
+              // Use O(1) lookup instead of O(n) search
+              const toolName = toolUseMap.get(content.tool_use_id);
+              const willBeSkipped = toolName && (toolsWithWidgets.has(toolName) || toolName.startsWith('mcp__'));
               if (!willBeSkipped) {
                 hasVisibleContent = true;
                 break;
@@ -258,7 +287,7 @@ export const ClaudeCodeSession: React.FC<ClaudeCodeSessionProps> = ({
       }
       return true;
     });
-  }, [messages]);
+  }, [messages, toolUseMap]);
 
   const rowVirtualizer = useVirtualizer({
     count: displayableMessages.length,
@@ -266,18 +295,6 @@ export const ClaudeCodeSession: React.FC<ClaudeCodeSessionProps> = ({
     estimateSize: () => 150, // Estimate, will be dynamically measured
     overscan: 5,
   });
-
-  // Debug logging
-  useEffect(() => {
-    console.log('[ClaudeCodeSession] State update:', {
-      projectPath,
-      session,
-      extractedSessionInfo,
-      effectiveSession,
-      messagesCount: messages.length,
-      isLoading
-    });
-  }, [projectPath, session, extractedSessionInfo, effectiveSession, messages.length, isLoading]);
 
   // Load session history if resuming
   useEffect(() => {
@@ -446,16 +463,14 @@ export const ClaudeCodeSession: React.FC<ClaudeCodeSessionProps> = ({
     // Set up session-specific listeners
     const outputUnlisten = await listen(`claude-output:${sessionId}`, async (event: any) => {
       try {
-        console.log('[ClaudeCodeSession] Received claude-output on reconnect:', event.payload);
-        
         if (!isMountedRef.current) return;
-        
+
         // Store raw JSONL
         setRawJsonlOutput(prev => [...prev, event.payload]);
-        
-        // Parse and display
+
+        // Parse and queue for batched display
         const message = JSON.parse(event.payload) as ClaudeStreamMessage;
-        setMessages(prev => [...prev, message]);
+        queueMessage(message);
       } catch (err) {
         console.error("Failed to parse message:", err, event.payload);
       }
@@ -692,7 +707,8 @@ export const ClaudeCodeSession: React.FC<ClaudeCodeSessionProps> = ({
               sessionMetrics.current.errorsEncountered += 1;
             }
 
-            setMessages((prev) => [...prev, message]);
+            // Use batched message queue for better performance
+            queueMessage(message);
           } catch (err) {
             console.error('Failed to parse message:', err, payload);
           }
@@ -1168,11 +1184,16 @@ export const ClaudeCodeSession: React.FC<ClaudeCodeSessionProps> = ({
   // Cleanup event listeners and track mount state
   useEffect(() => {
     isMountedRef.current = true;
-    
+
     return () => {
-      console.log('[ClaudeCodeSession] Component unmounting, cleaning up listeners');
       isMountedRef.current = false;
       isListeningRef.current = false;
+
+      // Clean up message batch timeout
+      if (flushTimeoutRef.current) {
+        clearTimeout(flushTimeoutRef.current);
+        flushTimeoutRef.current = null;
+      }
       
       // Track session completion with engagement metrics
       if (effectiveSession) {
